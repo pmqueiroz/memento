@@ -1,31 +1,40 @@
-pub fn main() !void {
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
-
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush();
-}
-
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit();
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
-}
-
-test "fuzz example" {
-    const Context = struct {
-        fn testOne(context: @This(), input: []const u8) anyerror!void {
-            _ = context;
-            // Try passing `--fuzz` to `zig build test` and see if it manages to fail this test case!
-            try std.testing.expect(!std.mem.eql(u8, "canyoufindme", input));
-        }
-    };
-    try std.testing.fuzz(Context{}, Context.testOne, .{});
-}
-
 const std = @import("std");
+const cli = @import("zig-cli");
+const Init = @import("modules/init/init.zig");
+
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+const allocator = gpa.allocator();
+
+fn parseArgs() cli.AppRunner.Error!cli.ExecFn {
+    var r = try cli.AppRunner.init(allocator);
+
+    const initCmd = cli.Command{
+        .name = "init",
+        .description = cli.Description{ .one_line = "initialize a new VCS repository" },
+        .target = cli.CommandTarget{
+            .action = cli.CommandAction{ .exec = Init.runInit },
+        },
+    };
+
+    const app = cli.App{
+        .option_envvar_prefix = "VCS_",
+        .command = cli.Command{
+            .name = "memento",
+            .description = cli.Description{ .one_line = "a simple version control system" },
+            .target = cli.CommandTarget{
+                .subcommands = try r.allocCommands(&.{initCmd}),
+            },
+        },
+        .version = "0.0.0",
+        .author = "Peam",
+    };
+
+    return r.getAction(&app);
+}
+
+pub fn main() anyerror!void {
+    const action = try parseArgs();
+    const code = action();
+    if (gpa.deinit() == .leak) @panic("allocator leaked");
+    return code;
+}

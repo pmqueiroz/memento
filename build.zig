@@ -3,6 +3,10 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+
+    const zigcli_dep = b.dependency("zig-cli", .{ .target = target });
+    const zigcli_mod = zigcli_dep.module("zig-cli");
+
     const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
@@ -13,6 +17,8 @@ pub fn build(b: *std.Build) void {
         .name = "memento",
         .root_module = exe_mod,
     });
+
+    exe.root_module.addImport("zig-cli", zigcli_mod);
 
     b.installArtifact(exe);
 
