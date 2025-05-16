@@ -25,6 +25,7 @@ fn parseArgs() cli.AppRunner.Error!cli.ExecFn {
                 .subcommands = try r.allocCommands(&.{initCmd}),
             },
         },
+        // grab version from build.zig.zon as soon as the zon parser support it
         .version = "0.0.0",
         .author = "Peam",
     };
