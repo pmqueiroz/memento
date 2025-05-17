@@ -19,7 +19,7 @@ fn vcsInit(target: std.fs.Dir) !void {
 }
 
 pub fn runInit() !void {
-    const cwd = try std.fs.cwd();
+    const cwd = std.fs.cwd();
     try vcsInit(cwd);
 }
 
