@@ -1,16 +1,15 @@
 const std = @import("std");
 const cli = @import("zig-cli");
+const config = @import("config.zig");
+const lib = @import("lib/lib.zig");
 const Init = @import("modules/init/init.zig");
 const Index = @import("modules/index/index.zig");
 
-var config = struct {
-    files_to_add: []const []const u8 = undefined,
-}{};
+pub fn main() anyerror!void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-const allocator = gpa.allocator();
-
-fn parseArgs() cli.AppRunner.Error!cli.ExecFn {
     var r = try cli.AppRunner.init(allocator);
     defer r.deinit();
 
@@ -38,7 +37,7 @@ fn parseArgs() cli.AppRunner.Error!cli.ExecFn {
     };
 
     const app = cli.App{
-        .option_envvar_prefix = "VCS_",
+        .option_envvar_prefix = "MEMENTO_",
         .command = cli.Command{
             .name = "memento",
             .description = cli.Description{ .one_line = "a simple version control system" },
@@ -46,17 +45,16 @@ fn parseArgs() cli.AppRunner.Error!cli.ExecFn {
                 .subcommands = try r.allocCommands(&.{ initCmd, indexCmd }),
             },
         },
-        // grab version from build.zig.zon as soon as the zon parser support it
         .version = "0.0.0",
         .author = "Peam",
     };
 
-    return r.getAction(&app);
-}
-
-pub fn main() anyerror!void {
-    const action = try parseArgs();
-    const code = action();
-    if (gpa.deinit() == .leak) @panic("allocator leaked");
-    return code;
+    const action = try r.getAction(&app);
+    _ = action() catch |err| {
+        if (lib.exception.isMementoError(err)) {
+            const translated = try lib.exception.translateError(err);
+            std.log.err("{s}\n", .{translated});
+            std.process.exit(1);
+        }
+    };
 }
