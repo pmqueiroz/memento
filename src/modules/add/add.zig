@@ -14,35 +14,18 @@ pub fn runAdd() lib.exception.MementoError!void {
 
     const repo = try lib.repository.openRepository();
 
-    var lines = std.ArrayList([]const u8).init(allocator);
     const indexFile = repo.openFile("index", .{}) catch {
         return lib.exception.MementoError.UnableToReadFile;
     };
     defer indexFile.close();
-    var buf_reader = std.io.bufferedReader(indexFile.reader());
-    const reader = buf_reader.reader();
+    const buf = indexFile.readToEndAlloc(allocator, std.math.maxInt(usize)) catch {
+        return lib.exception.MementoError.UnableToReadFile;
+    };
+    defer allocator.free(buf);
+    var indexFileIterator = std.mem.splitScalar(u8, buf, '\n');
 
-    var line = std.ArrayList(u8).init(allocator);
-    defer line.deinit();
-    const writer = line.writer();
-    while (reader.streamUntilDelimiter(writer, '\n', null)) {
-        defer line.clearRetainingCapacity();
-        if (line.items.len == 0) {
-            continue;
-        }
-
-        lines.append(line.items) catch {
-            std.debug.print("Error appending line: {s}\n", .{line.items});
-            return lib.exception.MementoError.GenericError;
-        };
-    } else |err| switch (err) {
-        error.EndOfStream => {
-            if (line.items.len > 0) {
-                std.debug.print("end: {s}\n", .{line.items});
-            }
-        },
-        else => return lib.exception.MementoError.GenericError,
-    }
+    var dedupedEntries = std.ArrayList([]const u8).init(allocator);
+    defer dedupedEntries.deinit();
 
     for (config.files_to_add) |path| {
         std.fs.cwd().access(path, .{}) catch |err| {
@@ -62,30 +45,37 @@ pub fn runAdd() lib.exception.MementoError!void {
         const record = try lib.Record().init(path, file);
         const entry = try record.allocateEntry(allocator);
 
-        var cleaned = std.ArrayList([]const u8).init(allocator);
-        for (lines.items) |rawEntry| {
+        while (indexFileIterator.next()) |rawEntry| {
+            if (rawEntry.len == 0) continue;
             const lineEntry = try lib.Record().initFromRaw(rawEntry);
-            if (!std.mem.eql(u8, lineEntry.path, lineEntry.path)) {
-                cleaned.append(rawEntry) catch {
+            if (!std.mem.eql(u8, lineEntry.path, record.path)) {
+                dedupedEntries.append(rawEntry) catch {
                     std.debug.print("Error appending line: {s}\n", .{rawEntry});
                     return lib.exception.MementoError.GenericError;
                 };
             }
         }
-        cleaned.append(entry) catch {
+
+        indexFileIterator.reset();
+
+        dedupedEntries.append(entry) catch {
             std.debug.print("Error appending entry: {s}\n", .{entry});
             return lib.exception.MementoError.GenericError;
         };
-        lines = cleaned;
     }
 
-    var idx_file = repo.createFile("index", .{ .truncate = true }) catch {
-        return lib.exception.MementoError.GenericError;
+    var idx_file = repo.createFile("index", .{ .truncate = false }) catch {
+        return lib.exception.MementoError.UnableToReadFile;
     };
     defer idx_file.close();
-    for (lines.items) |rawEntry| {
+    for (dedupedEntries.items, 0..) |rawEntry, i| {
         idx_file.writeAll(rawEntry) catch {
             return lib.exception.MementoError.GenericError;
         };
+        if (i < dedupedEntries.items.len - 1) {
+            idx_file.writeAll("\n") catch {
+                return lib.exception.MementoError.GenericError;
+            };
+        }
     }
 }
