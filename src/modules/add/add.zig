@@ -1,7 +1,7 @@
 const std = @import("std");
-const config = @import("../../config.zig");
-const lib = @import("../../lib/lib.zig");
 const index = @import("index.zig");
+const lib = @import("../../lib/lib.zig");
+const config = @import("../../config.zig");
 
 pub fn runAdd() lib.exception.MementoError!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -37,9 +37,12 @@ pub fn runAdd() lib.exception.MementoError!void {
             return lib.exception.MementoError.GenericError;
         };
 
-        const indexLine = try index.indexFile(file);
+        const record = try lib.Record().init(allocator, file);
+        defer record.deinit();
+        try record.createObject();
+        const entry = try record.allocateEntry(allocator);
 
-        out_index.appendSlice(indexLine) catch {
+        out_index.appendSlice(entry) catch {
             return lib.exception.MementoError.GenericError;
         };
     }
