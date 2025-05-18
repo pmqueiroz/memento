@@ -1,9 +1,7 @@
 const std = @import("std");
-const objectType = @import("object-type.zig");
-const exception = @import("exception.zig");
-const repository = @import("repository.zig");
+const lib = @import("lib.zig");
 
-pub fn sha1(payload: []const u8) exception.MementoError![40]u8 {
+pub fn sha1(payload: []const u8) lib.exception.MementoError![40]u8 {
     var hasher = std.crypto.hash.Sha1.init(.{});
     hasher.update(payload);
     const result = hasher.finalResult();
