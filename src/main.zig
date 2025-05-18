@@ -3,7 +3,7 @@ const cli = @import("zig-cli");
 const config = @import("config.zig");
 const lib = @import("lib/lib.zig");
 const Init = @import("modules/init/init.zig");
-const Index = @import("modules/index/index.zig");
+const Add = @import("modules/add/add.zig");
 
 pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -21,8 +21,8 @@ pub fn main() anyerror!void {
         },
     };
 
-    const indexCmd = cli.Command{
-        .name = "index",
+    const addCmd = cli.Command{
+        .name = "add",
         .description = cli.Description{ .one_line = "add files to the index" },
         .target = cli.CommandTarget{
             .action = cli.CommandAction{
@@ -31,7 +31,7 @@ pub fn main() anyerror!void {
                     .help = "Files to index",
                     .value_ref = r.mkRef(&config.files_to_add),
                 }}) },
-                .exec = Index.runIndex,
+                .exec = Add.runAdd,
             },
         },
     };
@@ -42,7 +42,7 @@ pub fn main() anyerror!void {
             .name = "memento",
             .description = cli.Description{ .one_line = "a simple version control system" },
             .target = cli.CommandTarget{
-                .subcommands = try r.allocCommands(&.{ initCmd, indexCmd }),
+                .subcommands = try r.allocCommands(&.{ initCmd, addCmd }),
             },
         },
         .version = "0.0.0",
@@ -52,7 +52,7 @@ pub fn main() anyerror!void {
     const action = try r.getAction(&app);
     _ = action() catch |err| {
         if (lib.exception.isMementoError(err)) {
-            const translated = try lib.exception.translateError(err);
+            const translated = lib.exception.translateError(err);
             std.log.err("{s}\n", .{translated});
             std.process.exit(1);
         }
