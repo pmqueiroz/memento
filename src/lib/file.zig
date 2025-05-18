@@ -16,6 +16,10 @@ pub const FileMode = enum {
             .symlink => SYMLINK,
         };
     }
+
+    pub fn fromString(mode: []const u8) FileMode {
+        if (std.mem.eql(u8, mode, EXECUTABLE)) return .executable else if (std.mem.eql(u8, mode, SYMLINK)) return .symlink else return .regular;
+    }
 };
 
 pub fn fileModeFromStat(stat: std.fs.File.Stat) FileMode {
