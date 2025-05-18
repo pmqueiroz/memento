@@ -15,8 +15,7 @@ pub fn indexFile(path: []const u8) lib.exception.MementoError![]const u8 {
         return lib.exception.MementoError.UnableToReadFile;
     };
 
-    const hash = try lib.hash.sha1(.blob, content);
-    try lib.repository.createObject(&hash, content);
+    const hash = try lib.repository.createObject(.blob, content);
 
     const fileStat = file.stat() catch {
         std.log.err("Error getting file stat: {s}\n", .{path});

@@ -1,6 +1,5 @@
 const std = @import("std");
 const exception = @import("exception.zig");
-const hash = @import("hash.zig");
 const file = @import("file.zig");
 const repository = @import("repository.zig");
 
@@ -21,9 +20,7 @@ pub fn Record() type {
             };
             defer allocator.free(content);
 
-            const digest = try hash.sha1(.blob, content);
-
-            try repository.createObject(&digest, content);
+            const hash = try repository.createObject(.blob, content);
 
             const fileStat = f.stat() catch {
                 std.log.err("Error getting file stat: {s}\n", .{path});
@@ -33,7 +30,7 @@ pub fn Record() type {
             const mode = file.fileModeFromStat(fileStat);
 
             return .{
-                .hash = digest,
+                .hash = hash,
                 .mode = mode,
                 .len = content.len,
                 .path = path,

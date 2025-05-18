@@ -1,5 +1,8 @@
 const std = @import("std");
 const exception = @import("exception.zig");
+const objectType = @import("object-type.zig");
+const hash = @import("hash.zig");
+const lib = @import("lib.zig");
 
 pub fn openRepository() exception.MementoError!std.fs.Dir {
     var dir = std.fs.cwd();
@@ -28,12 +31,21 @@ pub fn openRepository() exception.MementoError!std.fs.Dir {
     }
 }
 
-pub fn createObject(hash: []const u8, content: []const u8) exception.MementoError!void {
+pub fn createObject(objType: objectType.ObjectType, content: []const u8) exception.MementoError![40]u8 {
     const allocator = std.heap.page_allocator;
     const repo = try openRepository();
-    const bucket = hash[0..2];
+    const parsedObjType = objectType.toObjectTypeString(objType);
+    const payload = std.fmt.allocPrint(
+        allocator,
+        "{s} {d}\x00{s}",
+        .{ parsedObjType, content.len, content },
+    ) catch {
+        return exception.MementoError.GenericError;
+    };
+    defer allocator.free(payload);
+    const digest = try hash.sha1(payload);
 
-    const object_path = std.fs.path.join(allocator, &.{ "objects", bucket, hash }) catch {
+    const object_path = std.fs.path.join(allocator, &.{ "objects", digest[0..2], digest[2..] }) catch {
         return exception.MementoError.GenericError;
     };
 
@@ -50,7 +62,12 @@ pub fn createObject(hash: []const u8, content: []const u8) exception.MementoErro
 
     defer file.close();
 
-    file.writeAll(content) catch {
+    const compressedPayload = try lib.compress.zlib(allocator, payload);
+    defer allocator.free(compressedPayload);
+
+    file.writeAll(compressedPayload) catch {
         return exception.MementoError.GenericError;
     };
+
+    return digest;
 }

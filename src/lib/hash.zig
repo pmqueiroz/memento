@@ -1,26 +1,15 @@
 const std = @import("std");
 const objectType = @import("object-type.zig");
 const exception = @import("exception.zig");
+const repository = @import("repository.zig");
 
-pub fn sha1(objType: objectType.ObjectType, content: []const u8) exception.MementoError![40]u8 {
-    var header_buf: [64]u8 = undefined;
-    const parsedObjType = objectType.toObjectTypeString(objType);
-
-    const header_slice = std.fmt.bufPrint(
-        &header_buf,
-        "{s} {d}\x00",
-        .{ parsedObjType, content.len },
-    ) catch {
-        return exception.MementoError.GenericError;
-    };
-
+pub fn sha1(payload: []const u8) exception.MementoError![40]u8 {
     var hasher = std.crypto.hash.Sha1.init(.{});
-    hasher.update(header_slice);
-    hasher.update(content);
+    hasher.update(payload);
     const result = hasher.finalResult();
-    const hex: [40]u8 = std.fmt.bytesToHex(result, .lower);
+    const hash: [40]u8 = std.fmt.bytesToHex(result, .lower);
 
-    return hex;
+    return hash;
 }
 
 test "it should generate a valid hash" {
