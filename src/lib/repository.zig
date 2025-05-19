@@ -1,5 +1,6 @@
 const std = @import("std");
 const lib = @import("lib.zig");
+const config = @import("../config.zig");
 
 pub fn openRepository() lib.exception.MementoError!std.fs.Dir {
     var dir = std.fs.cwd();
@@ -105,7 +106,7 @@ pub fn readCommitMsg(allocator: std.mem.Allocator) lib.exception.MementoError![]
     }
 
     if (result.items.len == 0) {
-        return lib.exception.MementoError.GenericError;
+        return lib.exception.MementoError.CommitEmptyMessage;
     }
 
     const finalResult = std.mem.concat(allocator, u8, result.items) catch {
@@ -136,8 +137,9 @@ pub fn editCommitMsg() !void {
     const commitMsgFile = try openCommitMsg(.{ .truncate = true });
     defer commitMsgFile.close();
 
-    // TODO: get editor from config
-    const args: [2][]const u8 = .{ "vi", commitMsgPath };
+    const localConfig = try readConfig(allocator);
+
+    const args: [2][]const u8 = .{ localConfig.core.editor, commitMsgPath };
     var child = std.process.Child.init(&args, allocator);
 
     std.log.info("Waiting for your editor to close the file...", .{});
@@ -147,4 +149,24 @@ pub fn editCommitMsg() !void {
     if (term != .Exited) {
         return lib.exception.MementoError.GenericError;
     }
+}
+
+pub fn readConfig(allocator: std.mem.Allocator) lib.exception.MementoError!config.LocalConfig {
+    const repo = try openRepository();
+    const configFile = repo.openFile("config", .{}) catch {
+        return lib.exception.MementoError.NoRepositoryFound;
+    };
+    defer configFile.close();
+
+    const buffer = configFile.readToEndAllocOptions(allocator, std.math.maxInt(usize), null, 1, 0) catch {
+        return lib.exception.MementoError.UnableToReadFile;
+    };
+    defer allocator.free(buffer);
+
+    var status: std.zon.parse.Status = .{};
+    const result = std.zon.parse.fromSlice(config.LocalConfig, allocator, buffer[0..], &status, .{}) catch {
+        return lib.exception.MementoError.GenericError;
+    };
+
+    return result;
 }

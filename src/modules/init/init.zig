@@ -10,6 +10,7 @@ fn init(target: std.fs.Dir) !void {
     var mementoDir = try target.openDir(".memento", .{ .iterate = true });
     _ = try mementoDir.makeDir("objects");
     _ = try mementoDir.createFile("index", .{});
+    _ = try mementoDir.createFile("COMMIT_EDITMSG", .{});
     const head = try mementoDir.createFile("HEAD", .{});
     defer head.close();
     try head.writeAll("ref: refs/heads/main\n");
