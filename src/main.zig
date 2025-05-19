@@ -4,6 +4,7 @@ const config = @import("config.zig");
 const lib = @import("lib/lib.zig");
 const Init = @import("modules/init/init.zig");
 const Add = @import("modules/add/add.zig");
+const Commit = @import("modules/commit/commit.zig");
 
 pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -36,13 +37,30 @@ pub fn main() anyerror!void {
         },
     };
 
+    const commitCmd = cli.Command{
+        .name = "commit",
+        .description = cli.Description{ .one_line = "Record changes to the repository" },
+        .options = try r.allocOptions(&.{.{
+            .long_name = "message",
+            .short_alias = 'm',
+            .help = "Commit message",
+            .required = false,
+            .value_ref = r.mkRef(&config.commit_message),
+        }}),
+        .target = cli.CommandTarget{
+            .action = cli.CommandAction{
+                .exec = Commit.runCommit,
+            },
+        },
+    };
+
     const app = cli.App{
         .option_envvar_prefix = "MEMENTO_",
         .command = cli.Command{
             .name = "memento",
             .description = cli.Description{ .one_line = "a simple version control system" },
             .target = cli.CommandTarget{
-                .subcommands = try r.allocCommands(&.{ initCmd, addCmd }),
+                .subcommands = try r.allocCommands(&.{ initCmd, addCmd, commitCmd }),
             },
         },
         .version = "0.0.0",

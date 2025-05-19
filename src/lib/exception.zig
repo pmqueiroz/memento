@@ -4,8 +4,10 @@ pub const MementoError = error{
     GenericError,
     NoRepositoryFound,
     UnableToReadFile,
+    UnableToWriteFile,
     CouldNotCreateFile,
     RawIsNotAnValidRecordEntry,
+    CommitEmptyMessage,
 };
 
 pub fn isMementoError(err: anyerror) bool {
@@ -14,8 +16,10 @@ pub fn isMementoError(err: anyerror) bool {
         err == MementoError.GenericError or
         err == MementoError.NoRepositoryFound or
         err == MementoError.UnableToReadFile or
+        err == MementoError.UnableToWriteFile or
         err == MementoError.CouldNotCreateFile or
-        err == MementoError.RawIsNotAnValidRecordEntry;
+        err == MementoError.RawIsNotAnValidRecordEntry or
+        err == MementoError.CommitEmptyMessage;
 }
 
 pub fn translateError(err: anyerror) []const u8 {
@@ -27,6 +31,8 @@ pub fn translateError(err: anyerror) []const u8 {
         MementoError.UnableToReadFile => "Unable to read file",
         MementoError.CouldNotCreateFile => "Unable to create file",
         MementoError.RawIsNotAnValidRecordEntry => "Raw is not a valid record entry",
+        MementoError.UnableToWriteFile => "Unable to write file",
+        MementoError.CommitEmptyMessage => "Commit message is empty",
         else => "Unknown error",
     };
 
