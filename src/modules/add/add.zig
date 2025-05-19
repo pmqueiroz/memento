@@ -1,5 +1,4 @@
 const std = @import("std");
-const index = @import("index.zig");
 const lib = @import("../../lib/lib.zig");
 const config = @import("../../config.zig");
 
