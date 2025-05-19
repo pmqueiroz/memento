@@ -5,3 +5,4 @@ pub const file = @import("file.zig");
 pub const compress = @import("compress.zig");
 pub const Record = @import("record.zig").Record;
 pub const objectType = @import("object-type.zig");
+pub const config = @import("config.zig");

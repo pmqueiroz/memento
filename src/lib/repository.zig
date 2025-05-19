@@ -151,7 +151,7 @@ pub fn editCommitMsg() !void {
     }
 }
 
-pub fn readConfig(allocator: std.mem.Allocator) lib.exception.MementoError!config.LocalConfig {
+pub fn readConfig(allocator: std.mem.Allocator) lib.exception.MementoError!lib.config.LocalConfig {
     const repo = try openRepository();
     const configFile = repo.openFile("config", .{}) catch {
         return lib.exception.MementoError.NoRepositoryFound;
@@ -164,7 +164,7 @@ pub fn readConfig(allocator: std.mem.Allocator) lib.exception.MementoError!confi
     defer allocator.free(buffer);
 
     var status: std.zon.parse.Status = .{};
-    const result = std.zon.parse.fromSlice(config.LocalConfig, allocator, buffer[0..], &status, .{}) catch {
+    const result = std.zon.parse.fromSlice(lib.config.LocalConfig, allocator, buffer[0..], &status, .{}) catch {
         return lib.exception.MementoError.GenericError;
     };
 

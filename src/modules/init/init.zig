@@ -1,5 +1,5 @@
 const std = @import("std");
-const config = @import("../../config.zig");
+const lib = @import("../../lib/lib.zig");
 
 fn init(target: std.fs.Dir) !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -21,7 +21,7 @@ fn init(target: std.fs.Dir) !void {
     var output = std.ArrayList(u8).init(alloc);
     defer output.deinit();
 
-    try std.zon.stringify.serialize(config.defaultLocalConfig, .{}, output.writer());
+    try std.zon.stringify.serialize(lib.config.defaultLocalConfig, .{ .whitespace = true }, output.writer());
 
     const defaultLocalConfig = try output.toOwnedSlice();
 
