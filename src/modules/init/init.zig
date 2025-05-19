@@ -1,4 +1,5 @@
 const std = @import("std");
+const config = @import("../../config.zig");
 
 fn init(target: std.fs.Dir) !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -9,9 +10,21 @@ fn init(target: std.fs.Dir) !void {
     var mementoDir = try target.openDir(".memento", .{ .iterate = true });
     _ = try mementoDir.makeDir("objects");
     _ = try mementoDir.createFile("index", .{});
-    var head = try mementoDir.createFile("HEAD", .{});
-    _ = try head.writeAll("ref: refs/heads/main\n");
-    head.close();
+    const head = try mementoDir.createFile("HEAD", .{});
+    defer head.close();
+    try head.writeAll("ref: refs/heads/main\n");
+
+    const configFile = try mementoDir.createFile("config", .{});
+    defer configFile.close();
+
+    var output = std.ArrayList(u8).init(alloc);
+    defer output.deinit();
+
+    try std.zon.stringify.serialize(config.defaultLocalConfig, .{}, output.writer());
+
+    const defaultLocalConfig = try output.toOwnedSlice();
+
+    try configFile.writeAll(defaultLocalConfig);
 
     std.debug.print("Initialized empty memento repository in {s}\n", .{
         try target.realpathAlloc(alloc, "."),
