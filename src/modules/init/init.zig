@@ -10,7 +10,7 @@ fn init(target: std.fs.Dir) !void {
     _ = try mementoDir.makeDir("objects");
     _ = try mementoDir.createFile("index", .{});
     var head = try mementoDir.createFile("HEAD", .{});
-    _ = try head.writeAll("null\n");
+    _ = try head.writeAll("ref: refs/heads/main\n");
     head.close();
 
     std.debug.print("Initialized empty memento repository in {s}\n", .{
