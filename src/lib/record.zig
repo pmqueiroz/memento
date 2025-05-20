@@ -18,7 +18,7 @@ pub fn Record() type {
             };
             defer allocator.free(content);
 
-            const hash = try lib.repository.createObject(.blob, content);
+            const hash = try lib.object.createBlob(content);
 
             const fileStat = f.stat() catch {
                 std.log.err("Error getting file stat: {s}\n", .{path});
