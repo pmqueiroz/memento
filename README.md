@@ -13,12 +13,22 @@ Currently, Memento supports the following commands:
 
 ## Installation
 
+### Install via Homebrew
+
+> [!WARNING]
+> Soon
+
+```sh
+brew tap pmqueiroz/tap
+brew install pmqueiroz/tap/memento
+```
+
+### Build Locally
+
 To build and use Memento locally, you'll need:
 
 - [Zig](https://ziglang.org/download/) (tested with version 0.14.0 or newer)
 - A POSIX-compliant system (Linux, macOS, or WSL on Windows)
-
-### Build Locally
 
 ```sh
 git clone https://github.com/yourusername/memento.git
@@ -36,16 +46,6 @@ You can move it into your `$PATH`:
 
 ```sh
 cp ./zig-out/bin/memento ~/.local/bin/
-```
-
-### Install via Homebrew
-
-> [!WARNING]
-> Soon
-
-```sh
-brew tap pmqueiroz/tap
-brew install pmqueiroz/tap/memento
 ```
 
 ## Configuration
