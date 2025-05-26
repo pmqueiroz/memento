@@ -1,7 +1,7 @@
 const std = @import("std");
 const lib = @import("lib.zig");
 
-pub fn zlib(
+pub fn compress(
     allocator: std.mem.Allocator,
     payload: []const u8,
 ) lib.exception.MementoError![]u8 {
@@ -18,7 +18,7 @@ pub fn zlib(
     };
 }
 
-pub fn unzlib(
+pub fn decompress(
     allocator: std.mem.Allocator,
     payload: []const u8,
 ) lib.exception.MementoError![]u8 {

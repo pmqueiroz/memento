@@ -128,7 +128,7 @@ fn createObject(allocator: std.mem.Allocator, objType: ObjectType, content: []co
     };
     defer file.close();
 
-    const compressedPayload = try lib.compress.zlib(allocator, payload);
+    const compressedPayload = try lib.zlib.compress(allocator, payload);
     defer allocator.free(compressedPayload);
 
     file.writeAll(compressedPayload) catch {
@@ -154,7 +154,7 @@ pub fn readObject(allocator: std.mem.Allocator, hash: [40]u8) lib.exception.Meme
     };
     defer allocator.free(compressedContent);
 
-    return try lib.compress.unzlib(allocator, compressedContent);
+    return try lib.zlib.decompress(allocator, compressedContent);
 }
 
 pub fn parseTreeObject(allocator: std.mem.Allocator, content: []const u8) lib.exception.MementoError!TreeObject {
