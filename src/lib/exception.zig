@@ -8,6 +8,7 @@ pub const MementoError = error{
     CouldNotCreateFile,
     RawIsNotAnValidRecordEntry,
     CommitEmptyMessage,
+    NoBranchFound,
 };
 
 pub fn isMementoError(err: anyerror) bool {
@@ -19,7 +20,8 @@ pub fn isMementoError(err: anyerror) bool {
         err == MementoError.UnableToWriteFile or
         err == MementoError.CouldNotCreateFile or
         err == MementoError.RawIsNotAnValidRecordEntry or
-        err == MementoError.CommitEmptyMessage;
+        err == MementoError.CommitEmptyMessage or
+        err == MementoError.NoBranchFound;
 }
 
 pub fn translateError(err: anyerror) []const u8 {
@@ -33,6 +35,7 @@ pub fn translateError(err: anyerror) []const u8 {
         MementoError.RawIsNotAnValidRecordEntry => "Raw is not a valid record entry",
         MementoError.UnableToWriteFile => "Unable to write file",
         MementoError.CommitEmptyMessage => "Commit message is empty",
+        MementoError.NoBranchFound => "No branch found",
         else => "Unknown error",
     };
 

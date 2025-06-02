@@ -2,6 +2,8 @@ const std = @import("std");
 const lib = @import("lib.zig");
 const config = @import("../config.zig");
 
+pub const tree = @import("repository/tree.zig");
+
 pub fn openRepository() lib.exception.MementoError!std.fs.Dir {
     var dir = std.fs.cwd();
     while (true) {

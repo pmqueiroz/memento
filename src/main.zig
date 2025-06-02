@@ -4,6 +4,7 @@ const config = @import("config.zig");
 const lib = @import("lib/lib.zig");
 const Init = @import("modules/init/init.zig");
 const Add = @import("modules/add/add.zig");
+const Status = @import("modules/status/status.zig");
 const Commit = @import("modules/commit/commit.zig");
 
 pub fn main() anyerror!void {
@@ -37,6 +38,16 @@ pub fn main() anyerror!void {
         },
     };
 
+    const statusCmd = cli.Command{
+        .name = "status",
+        .description = cli.Description{ .one_line = "show the working tree status" },
+        .target = cli.CommandTarget{
+            .action = cli.CommandAction{
+                .exec = Status.runStatus,
+            },
+        },
+    };
+
     const commitCmd = cli.Command{
         .name = "commit",
         .description = cli.Description{ .one_line = "Record changes to the repository" },
@@ -60,7 +71,7 @@ pub fn main() anyerror!void {
             .name = "memento",
             .description = cli.Description{ .one_line = "a simple version control system" },
             .target = cli.CommandTarget{
-                .subcommands = try r.allocCommands(&.{ initCmd, addCmd, commitCmd }),
+                .subcommands = try r.allocCommands(&.{ initCmd, addCmd, commitCmd, statusCmd }),
             },
         },
         .version = "0.0.0",
